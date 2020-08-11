@@ -76,6 +76,8 @@ static void usage_err(void)
 static inline void frc(uint64_t* pval)
 {
   uint32_t low, high;
+  /* See rdtsc_ordered() of Linux */
+  __asm__ __volatile__("lfence");
   __asm__ __volatile__("rdtsc" : "=a" (low) , "=d" (high));	 	
   *pval = ((uint64_t) high << 32) | low;
 }
