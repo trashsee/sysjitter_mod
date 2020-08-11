@@ -228,7 +228,6 @@ static unsigned measure_cpu_mhz(void)
   return (unsigned) (m / 1000000);
 }
 
-
 static void thread_init(struct thread* t)
 {
   int bytes = g.max_interruptions * sizeof(struct interruption);
@@ -238,24 +237,25 @@ static void thread_init(struct thread* t)
   TEST(t->sorted = malloc(g.max_interruptions * sizeof(t->sorted[0])));
 }
 
-
 static uint64_t cycles_to_ns(const struct thread* t, uint64_t cycles)
 {
   return cycles * 1000 / t->cpu_mhz;
 }
-
 
 static uint64_t cycles_to_us(const struct thread* t, uint64_t cycles)
 {
   return cycles / t->cpu_mhz;
 }
 
+static float cycles_to_us_f(const struct thread* t, uint64_t cycles)
+{
+  return (float)cycles / (float) t->cpu_mhz;
+}
 
 static float cycles_to_sec_f(const struct thread* t, uint64_t cycles)
 {
   return cycles / (t->cpu_mhz * 1e6);
 }
-
 
 static void doit(struct thread* t, cycles_t threshold_cycles)
 {
@@ -504,6 +504,8 @@ static int write_raw(struct thread* threads, const char* outf)
 #define put_frc(fn)  putfield(fn, PRIx64)
 #define put_cycles(fn)                                          \
   _putfield(#fn"(ns)", cycles_to_ns(&(t[i]), t[i].fn), PRIu64)
+#define put_cycles_us(fn)                                       \
+  _putfield(#fn"(us)", cycles_to_us_f(&(t[i]), t[i].fn), ".2f")
 #define put_cycles_s(fn)                                        \
   _putfield(#fn"(s)", cycles_to_sec_f(&(t[i]), t[i].fn), ".3f")
 #define put_percent(a, b)                                               \
@@ -535,6 +537,11 @@ static void write_summary(struct thread* t, FILE* f)
   put_cycles(int_99999);
   put_cycles(int_max);
   put_cycles(int_total);
+  if( g.verbose ) {
+    put_cycles_us(int_min);
+    put_cycles_us(int_max);
+    put_cycles_us(int_total);
+  }
   put_percent(int_total, runtime);
   if( g.verbose ) {
     put_frc(frc_start);
